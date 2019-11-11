@@ -9,7 +9,7 @@ router.get("/", (req, res) => {
       res.status(200).json(projects);
     })
     .catch(err => {
-      res.status(500).json(err);
+      res.status(500).json({message: "Errr getting projects", err});
     });
 });
 
@@ -22,7 +22,7 @@ router.get("/:id", validateID, (req, res) => {
     .catch(err => {
         res.status(500).json(err);
     })
-    res.status(404).json({message: "Can't find project with that ID"})
+    res.status(404).json({message: "Can't find project with that ID", err})
 })
 
 router.post("/", validateBody, validateProjectKeys, (req, res, next) => {
@@ -32,15 +32,52 @@ router.post("/", validateBody, validateProjectKeys, (req, res, next) => {
       res.status(201).json(newProj);
     })
     .catch(err => {
-      res.status(500).json(err);
+      res.status(500).json({message: "Error adding the new project", err});
+    });
+
+    router.put("/:id", validateID, validateBody, (req,res,next) => {
+        const id = req.params.id;
+        const projectUpdate = req.body;
+    
+    router
+    .update(id, projectUpdate)
+    .then(updatedProject => {
+      res.status(200).json(updatedProject);
+    })
+    .catch(err => {
+      res.status(500).json({ message: "Error updating project", err });
     });
 });
 
+router.delete("/:id", validateID, (req, res) => {
+  const id = req.params.id;
 
-router.post("/:id", validateID, validateBody, (req,res,next) => {
-    const id = req.params.id;
-    const projectUpdate = req.body;
+  db.remove(id)
+    .then(deleted => {
+      res.status(200).json(deleted);
+    })
+    .catch(err => {
+      res.status(500).json({ message: "Error deleting project", err });
+    });
 });
+
+router.get("/:id/actions", validateID, (req,res) => {
+    const id = req.params.id;
+    db.getProjectActions(id)
+    .then(actions => {
+        res.status(200).json(actions);
+    })
+    .catch (err => {
+        res.status(500).json({ message: "Error retrieving actions", err});
+    });
+});
+
+});
+
+
+
+
+
 
 // This is the middleware!!!! 
 function validateID(req, res, next) {
